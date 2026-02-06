@@ -66,7 +66,7 @@ A modern, feature-rich typing speed test application with beautiful UI, achievem
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/typing-master.git
+   git clone https://github.com/zaid0091/typing-master.git
    cd typing-master
    ```
 
