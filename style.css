@@ -452,6 +452,73 @@ select:focus {
     transform: translateY(0);
 }
 
+/* Custom Text Container */
+#custom-text-container {
+    background: var(--bg-secondary);
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
+}
+
+#custom-text {
+    width: 100%;
+    min-height: 200px;
+    padding: 1.5rem;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1rem;
+    line-height: 1.6;
+    resize: vertical;
+    transition: all 0.3s ease;
+    margin-bottom: 1.5rem;
+}
+
+#custom-text:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
+    background: var(--bg-secondary);
+}
+
+#custom-text::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
+#use-custom-text {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: white;
+    background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3);
+    font-family: 'Inter', sans-serif;
+}
+
+#use-custom-text:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 12px rgba(79, 70, 229, 0.4);
+}
+
+#use-custom-text:active {
+    transform: translateY(0);
+}
+
 /* Stats Container (Live) */
 #stats-container {
     display: grid;
@@ -934,7 +1001,7 @@ td:last-child {
 
     /* Main Container Padding */
     #main-container {
-        padding: 1.5rem;
+        padding: 4rem 1.5rem 1.5rem 1.5rem;
     }
 
     .countdown-number {
@@ -1001,7 +1068,26 @@ td:last-child {
     td {
         padding: 0.8rem 1rem;
     }
+
+    /* Paragraph Box - Add top margin to avoid overlap */
+    #paragraph-box {
+        margin-top: 3rem;
+    }
+
+    /* Timer and Velocity Display - Reduce size */
+    .timer-display,
+    .velocity-display {
+        font-size: 1rem;
+        padding: 0.25rem 0.7rem;
+    }
+
+    /* Coach Tips - Add spacing */
+    #coach-tips {
+        margin-top: 2.5rem;
+        font-size: 0.9rem;
+    }
 }
+
 
 @media (max-width: 480px) {
 
@@ -1497,7 +1583,7 @@ input:checked+.slider:before {
 /* ============= Mobile Optimization (< 480px) ============= */
 @media (max-width: 480px) {
     #main-container {
-        padding: 1rem;
+        padding: 5rem 1rem 1rem 1rem;
         width: 100%;
         margin-top: 1rem;
         border-right: none;
@@ -1523,6 +1609,45 @@ input:checked+.slider:before {
         line-height: 1.6;
         min-height: 120px;
         padding: 1rem;
+        margin-top: 3rem;
+    }
+
+    /* Timer and Velocity Display - Smaller on mobile */
+    .timer-display,
+    .velocity-display {
+        font-size: 0.9rem;
+        padding: 0.25rem 0.6rem;
+        top: 0.5rem;
+    }
+
+    .timer-display {
+        right: 0.5rem;
+    }
+
+    .velocity-display {
+        left: 0.5rem;
+    }
+
+    /* Coach Tips - Add spacing */
+    #coach-tips {
+        margin-top: 2.5rem;
+        font-size: 0.85rem;
+    }
+
+    /* Custom Text Container - Mobile */
+    #custom-text-container {
+        padding: 1.5rem;
+    }
+
+    #custom-text {
+        min-height: 150px;
+        padding: 1rem;
+        font-size: 0.95rem;
+    }
+
+    #use-custom-text {
+        font-size: 0.95rem;
+        padding: 0.9rem 1.5rem;
     }
 
     /* Stack Filter Buttons */
