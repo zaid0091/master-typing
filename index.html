@@ -7,6 +7,7 @@
   <title>Typing Master</title>
   <link rel="shortcut icon" href="logo.png" type="image/x-icon">
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -21,7 +22,8 @@
       <li><a href="#stats-section" class="nav-link">History</a></li>
     </ul>
     <div class="level-container" title="Your Typing Level">
-      <div class="level-badge">Lv. <span id="level-display">1</span></div>
+      <div class="level-badge">Lv. <span id="level-display">1</span> <span id="nav-title-display"
+          class="title-tag hidden-section"></span></div>
       <div class="xp-bar-outer">
         <div id="xp-bar-inner" class="xp-bar-inner"></div>
       </div>
@@ -164,6 +166,7 @@
           <button class="filter-btn" data-filter="weekly">Weekly</button>
           <button class="filter-btn" data-filter="monthly">Monthly</button>
           <button class="filter-btn" data-filter="hard">Hard Mode</button>
+          <button id="global-filter-btn" class="filter-btn global-btn" data-filter="global">🌎 Global</button>
         </div>
         <div id="leaderboard-list">
           <!-- Leaderboard items will be inserted here by JS -->
@@ -197,9 +200,19 @@
             <div class="profile-info">
               <h3 id="profile-level-tag">Level 1</h3>
               <p id="profile-xp-tag">0 / 500 XP</p>
+              <div id="profile-title-display" class="profile-title-tag"></div>
               <div class="profile-xp-bar-outer">
                 <div id="profile-xp-bar-inner" class="profile-xp-bar-inner"></div>
               </div>
+            </div>
+          </div>
+
+          <!-- Titles Card -->
+          <div class="profile-card titles-card glass-panel">
+            <h3>Player Titles</h3>
+            <p class="subtitle">Equip your hard-earned titles</p>
+            <div id="titles-selection-grid" class="titles-grid">
+              <!-- Titles will be inserted here by JS -->
             </div>
           </div>
 
@@ -261,6 +274,21 @@
       </div>
       <div class="modal-actions">
         <button id="avatar-modal-cancel" class="modal-btn secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Username Modal -->
+  <div id="username-modal" class="modal-overlay hidden-section">
+    <div class="modal-content">
+      <div class="modal-icon">👤</div>
+      <h3>Global Profile</h3>
+      <p>Enter a username to compete on the global leaderboard!</p>
+      <input type="text" id="global-username-input" class="modal-input" placeholder="Your Username (3-15 chars)"
+        maxlength="15">
+      <div class="modal-actions">
+        <button id="username-modal-cancel" class="modal-btn secondary">Later</button>
+        <button id="username-modal-save" class="modal-btn primary">Save & Join</button>
       </div>
     </div>
   </div>

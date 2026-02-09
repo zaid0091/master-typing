@@ -34,6 +34,16 @@
     const zenToggle = document.querySelector('#zen-toggle');
     const profileBtn = document.querySelector('#profile-btn');
 
+    // ============= Supabase Configuration =============
+    // IMPORTANT: Replace these with your project's URL and Anon Key from Settings > API
+    const SUPABASE_URL = "https://kqcmwqowbsgojoitsqlg.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxY213cW93YnNnb2pvaXRzcWxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1ODQ4ODUsImV4cCI6MjA4NjE2MDg4NX0.kGeNvegsDy-dQwLWoZ8J7QvpzKRjS5cqkTuOhtQya88";
+
+    let supabase = null;
+    if (typeof window.supabase !== 'undefined' && SUPABASE_URL.indexOf("YOUR_SUPABASE_URL") === -1) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
     // ============= State Variables =============
     let timer = null;
     let secondsPassed = 0;
@@ -154,6 +164,53 @@
         }
     }
 
+    // ============= Global Leaderboard Logic =============
+    const GlobalLeaderboard = {
+        saveScore: async function (wpm, accuracy, difficulty) {
+            if (!supabase) return;
+            const username = localStorage.getItem('globalUsername');
+            if (!username) return;
+
+            const avatar = UserProfile.getAvatar();
+
+            const { data, error } = await supabase
+                .from('global_leaderboard')
+                .insert([
+                    { username, wpm, accuracy, difficulty, avatar }
+                ]);
+
+            if (error) console.error('Error saving global score:', error);
+            else showToast('Global score published! 🌎');
+        },
+
+        fetchTopScores: async function () {
+            if (!supabase) return [];
+            const { data, error } = await supabase
+                .from('global_leaderboard')
+                .select('*')
+                .order('wpm', { ascending: false })
+                .limit(50);
+
+            if (error) {
+                console.error('Error fetching global scores:', error);
+                return [];
+            }
+            return data;
+        }
+    };
+
+    // ============= Titles & Prestige Configuration =============
+    const TITLES = [
+        { id: 'novice', name: 'Novice', tier: 'common', requirement: 'Level 2', condition: (stats, level) => level >= 2 },
+        { id: 'enthusiast', name: 'Enthusiast', tier: 'common', requirement: '10 tests completed', condition: (stats) => stats.totalTests >= 10 },
+        { id: 'precision', name: 'Precision', tier: 'rare', requirement: '98% Avg. Accuracy', condition: (stats) => stats.avgAcc >= 98 },
+        { id: 'speed-demon', name: 'Speed Demon', tier: 'rare', requirement: '100+ Best WPM', condition: (stats) => stats.pbEasy >= 100 || stats.pbMedium >= 100 || stats.pbHard >= 100 },
+        { id: 'zen-master', name: 'Zen Master', tier: 'epic', requirement: '50 tests completed', condition: (stats) => stats.totalTests >= 50 },
+        { id: 'epic-typer', name: 'Epic Typer', tier: 'epic', requirement: 'Level 10', condition: (stats, level) => level >= 10 },
+        { id: 'ghost-king', name: 'Ghost King', tier: 'legendary', requirement: '120+ Best WPM', condition: (stats) => stats.pbEasy >= 120 || stats.pbMedium >= 120 || stats.pbHard >= 120 },
+        { id: 'typing-legend', name: 'Typing Legend', tier: 'legendary', requirement: 'Level 20', condition: (stats, level) => level >= 20 },
+    ];
+
     // ============= User Profile Logic =============
     const AVATARS = ['👤', '🐱', '🐶', '🦊', '🐼', '🦁', '🐯', '🐨', '🐸', '🐙', '🦖', '🦄', '👻', '🤖', '👽', '👾', '🎮', '💡', '🔥', '✨'];
 
@@ -166,6 +223,30 @@
 
         getAvatar: function () {
             return localStorage.getItem('userAvatar') || '👤';
+        },
+
+        getEquippedTitle: function () {
+            const titleId = localStorage.getItem('equippedTitle');
+            return TITLES.find(t => t.id === titleId) || null;
+        },
+
+        unlockTitles: function () {
+            const stats = this.calculateStats();
+            if (!stats) return;
+
+            const currentLevel = parseInt(levelDisplay.innerText) || 1;
+            let newlyUnlocked = false;
+
+            TITLES.forEach(title => {
+                const isUnlocked = localStorage.getItem(`title-${title.id}`) === 'true';
+                if (!isUnlocked && title.condition(stats, currentLevel)) {
+                    localStorage.setItem(`title-${title.id}`, 'true');
+                    newlyUnlocked = true;
+                    showToast(`New Title Unlocked: ${title.name}!`);
+                }
+            });
+
+            if (newlyUnlocked) this.updateUI();
         },
 
         calculateStats: function () {
@@ -230,6 +311,62 @@
             document.getElementById('pb-easy').innerText = stats.pbEasy + ' WPM';
             document.getElementById('pb-medium').innerText = stats.pbMedium + ' WPM';
             document.getElementById('pb-hard').innerText = stats.pbHard + ' WPM';
+
+            // Update Title Displays
+            const equipped = this.getEquippedTitle();
+            const navTitle = document.getElementById('nav-title-display');
+            const profileTitle = document.getElementById('profile-title-display');
+
+            if (equipped) {
+                navTitle.innerText = equipped.name;
+                navTitle.className = `title-tag tier-${equipped.tier}`;
+                navTitle.classList.remove('hidden-section');
+
+                profileTitle.innerText = equipped.name;
+                profileTitle.className = `profile-title-tag tier-${equipped.tier}`;
+                profileTitle.classList.remove('hidden-section');
+            } else {
+                navTitle.classList.add('hidden-section');
+                profileTitle.classList.add('hidden-section');
+            }
+
+            // Prestige Effects
+            document.querySelectorAll('.profile-avatar').forEach(avatar => {
+                if (level >= 10) avatar.classList.add('prestige-glow');
+                else avatar.classList.remove('prestige-glow');
+            });
+
+            // Update Selection Grid
+            const grid = document.getElementById('titles-selection-grid');
+            if (grid) {
+                grid.innerHTML = '';
+                TITLES.forEach(title => {
+                    const isUnlocked = localStorage.getItem(`title-${title.id}`) === 'true';
+                    const isEquipped = equipped && equipped.id === title.id;
+
+                    const div = document.createElement('div');
+                    div.className = `title-item ${isUnlocked ? 'unlocked' : ''} ${isEquipped ? 'equipped' : ''} tier-${title.tier}`;
+                    div.innerHTML = `
+                        <span class="title-name">${title.name}</span>
+                        <span class="title-requirement">${isUnlocked ? 'Unlocked' : title.requirement}</span>
+                    `;
+
+                    if (isUnlocked && !isEquipped) {
+                        div.addEventListener('click', () => {
+                            localStorage.setItem('equippedTitle', title.id);
+                            this.updateUI();
+                            showToast(`Title Equipped: ${title.name}`);
+                        });
+                    } else if (isEquipped) {
+                        div.addEventListener('click', () => {
+                            localStorage.removeItem('equippedTitle');
+                            this.updateUI();
+                        });
+                    }
+
+                    grid.appendChild(div);
+                });
+            }
         }
     };
 
@@ -801,7 +938,7 @@
             if (secondsPassed > 0) {
                 const timeInMinutes = secondsPassed / 60;
                 const liveCPM = Math.round(inputChars.length / timeInMinutes);
-                const liveWPM = Math.round((correctCount / 5) / timeInMinutes);
+                const liveWPM = Math.round((correctChars / 5) / timeInMinutes);
                 cpm_container.innerText = liveCPM;
                 wpm_container.innerText = liveWPM;
                 velocityDisplay.innerText = liveWPM + ' WPM';
@@ -883,7 +1020,20 @@
         updateStreak();
         updateAchievements();
         renderWPMChart();
+        UserProfile.unlockTitles();
         UserProfile.updateUI();
+
+        // Push to Global Leaderboard if configured
+        if (supabase) {
+            const bestWPM = history.reduce((max, r) => Math.max(max, r.wpm), 0);
+            const currentWPM = testResult.wpm;
+
+            // Logic: Only push if it's a significant score or user is in global view
+            if (currentWPM >= 60 || currentWPM >= bestWPM) {
+                GlobalLeaderboard.saveScore(currentWPM, testResult.accuracy, testResult.difficulty);
+            }
+        }
+
         document.body.classList.remove('zen-mode-active');
         showVignette('success');
     }
@@ -894,40 +1044,137 @@
         localStorage.setItem('typingHistory', JSON.stringify(history));
     }
 
-    function updateLeaderboard() {
-        // Mock data generation (since we removed the backend/global part, we simulate local leaderboard filtering)
-        // For now, let's just use the history as a source for "local leaderboard" mixed with some static high scores for visual demo
+    async function updateLeaderboard() {
+        const filter = document.querySelector('.filter-btn.active').dataset.filter;
+        const listContainer = document.getElementById('leaderboard-list');
+
+        if (filter === 'global') {
+            listContainer.innerHTML = '<div class="loading-spinner">📡 Connecting to Global Server...</div>';
+
+            if (!supabase) {
+                listContainer.innerHTML = `
+                    <div class="empty-state">
+                        <p>Supabase connection not configured.</p>
+                        <p style="font-size: 0.8rem; margin-top: 10px;">Please add your SUPABASE_URL and KEY in script.js</p>
+                    </div>`;
+                return;
+            }
+
+            const globalScores = await GlobalLeaderboard.fetchTopScores();
+            renderLeaderboard(globalScores, true);
+            return;
+        }
+
         const history = JSON.parse(localStorage.getItem('typingHistory')) || [];
-        const difficulty = document.querySelector('.filter-btn.active').dataset.filter;
+        let filtered = [...history];
 
-        let filtered = history.sort((a, b) => b.wpm - a.wpm).slice(0, 10);
-
-        if (difficulty !== 'all') {
-            if (difficulty === 'hard') filtered = filtered.filter(r => r.difficulty === 'Hard');
+        if (filter === 'weekly') {
+            const oneWeek = 7 * 24 * 60 * 60 * 1000;
+            filtered = filtered.filter(r => (Date.now() - new Date(r.date).getTime()) < oneWeek);
+        } else if (filter === 'monthly') {
+            const oneMonth = 30 * 24 * 60 * 60 * 1000;
+            filtered = filtered.filter(r => (Date.now() - new Date(r.date).getTime()) < oneMonth);
+        } else if (filter === 'hard') {
+            filtered = filtered.filter(r => r.difficulty.toLowerCase() === 'hard');
         }
 
-        let html = '';
-        if (filtered.length === 0) {
-            html = '<div class="empty-state"><p>No data for this filter</p></div>';
-        } else {
-            html = '<table class="leaderboard-table"><thead><tr><th>Rank</th><th>WPM</th><th>Accuracy</th><th>Mode</th><th>Date</th></tr></thead><tbody>';
-            filtered.forEach((result, index) => {
-                const dateObj = new Date(result.date);
-                const dateStr = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-
-                html += `<tr>
-                    <td>#${index + 1}</td>
-                    <td>${result.wpm}</td>
-                    <td>${result.accuracy}%</td>
-                    <td>${result.difficulty}</td>
-                    <td>${dateStr}</td>
-                </tr>`;
-            });
-            html += '</tbody></table>';
-        }
-
-        leaderboardList.innerHTML = html;
+        filtered.sort((a, b) => b.wpm - a.wpm);
+        renderLeaderboard(filtered.slice(0, 10));
     }
+
+    function renderLeaderboard(data, isGlobal = false) {
+        const listContainer = document.getElementById('leaderboard-list');
+        listContainer.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            listContainer.innerHTML = '<div class="empty-state">No records found yet.</div>';
+            return;
+        }
+
+        const table = document.createElement('table');
+        table.className = 'leaderboard-table';
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Player</th>
+                    <th>WPM</th>
+                    <th>Acc</th>
+                    <th>Diff</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-body"></tbody>
+        `;
+        listContainer.appendChild(table);
+
+        const body = document.getElementById('leaderboard-body');
+        data.forEach((entry, index) => {
+            const row = document.createElement('tr');
+            const rank = index + 1;
+            const rankClass = rank <= 3 ? `rank-${rank}` : 'rank-other';
+            const date = isGlobal ? new Date(entry.created_at).toLocaleDateString() : new Date(entry.date).toLocaleDateString();
+
+            row.innerHTML = `
+                <td><span class="rank-badge ${rankClass}">${rank}</span></td>
+                <td><span style="font-size: 1.2rem; margin-right: 8px;">${entry.avatar || '👤'}</span><strong>${entry.username || 'Local Player'}</strong></td>
+                <td class="wpm-cell">${entry.wpm}</td>
+                <td>${entry.accuracy}%</td>
+                <td><span class="diff-tag ${entry.difficulty.toLowerCase()}">${entry.difficulty}</span></td>
+                <td style="opacity: 0.6; font-size: 0.8rem;">${date}</td>
+            `;
+            body.appendChild(row);
+        });
+    }
+
+    // ============= Username Modal Logic =============
+    const usernameModal = document.getElementById('username-modal');
+    const usernameInput = document.getElementById('global-username-input');
+    const usernameCancel = document.getElementById('username-modal-cancel');
+    const usernameSave = document.getElementById('username-modal-save');
+
+    function checkGlobalUsername() {
+        const username = localStorage.getItem('globalUsername');
+        if (!username) {
+            usernameModal.classList.remove('hidden-section');
+            return false;
+        }
+        return true;
+    }
+
+    usernameSave.addEventListener('click', () => {
+        const value = usernameInput.value.trim();
+        if (value.length >= 3 && value.length <= 15) {
+            localStorage.setItem('globalUsername', value);
+            usernameModal.classList.add('hidden-section');
+            showToast(`Welcome, ${value}! 🌎`);
+            if (document.querySelector('.filter-btn.active').dataset.filter === 'global') {
+                updateLeaderboard();
+            }
+        } else {
+            showToast('Username must be 3-15 characters.');
+        }
+    });
+
+    usernameCancel.addEventListener('click', () => {
+        usernameModal.classList.add('hidden-section');
+    });
+
+    // Update Filter Button logic to prompt for username
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            if (btn.dataset.filter === 'global') {
+                if (checkGlobalUsername()) {
+                    updateLeaderboard();
+                }
+            } else {
+                updateLeaderboard();
+            }
+        });
+    });
 
     function updateHistory() {
         const history = JSON.parse(localStorage.getItem('typingHistory')) || [];
@@ -1000,16 +1247,18 @@
             updateStreak();
         } else if (section === 'leaderboard') {
             document.getElementById('leaderboard-section').classList.remove('hidden-section');
-            updateLeaderboard();
+            const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+            if (activeFilter === 'global') {
+                if (checkGlobalUsername()) updateLeaderboard();
+            } else {
+                updateLeaderboard();
+            }
         } else if (section === 'stats') {
             document.getElementById('stats-section').classList.remove('hidden-section');
             updateHistory();
         } else if (section === 'profile') {
             document.getElementById('profile-section').classList.remove('hidden-section');
             UserProfile.updateUI();
-        } else if (section === 'global-rankings') {
-            document.getElementById('global-rankings-section').classList.remove('hidden-section');
-            GlobalRankings.render();
         }
     }
 
@@ -1146,13 +1395,7 @@
 
 
 
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            updateLeaderboard();
-        });
-    });
+
 
     inputArea.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
@@ -1167,5 +1410,6 @@
     updateStreak();
     updateAchievements();
     updateLevelingSystem(0); // Initialize UI without adding XP
+    UserProfile.unlockTitles();
     UserProfile.updateUI();
 })();

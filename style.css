@@ -1729,9 +1729,14 @@ input:checked+.slider:before {
     }
 
     .filter-btn {
-        width: 48%;
-        /* 2 per row */
+        width: 31%;
+        /* 3 per row */
         font-size: 0.8rem;
+    }
+
+    .filter-btn.global-btn {
+        width: 100%;
+        margin-top: 0.5rem;
     }
 
     /* Adjust Badge Grid */
@@ -2117,12 +2122,12 @@ input:checked+.slider:before {
 .profile-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
+    gap: 1rem;
+    margin-top: 1.5rem;
 }
 
 .profile-card {
-    padding: 2rem;
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -2176,8 +2181,8 @@ input:checked+.slider:before {
 .brief-stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    margin-top: 1rem;
+    gap: 1rem;
+    margin-top: 0.8rem;
 }
 
 .brief-stat {
@@ -2233,6 +2238,16 @@ input:checked+.slider:before {
 
     .profile-xp-bar-outer {
         width: 100%;
+    }
+
+    .titles-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .titles-grid {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -2300,4 +2315,224 @@ input:checked+.slider:before {
     color: white;
     border-color: white;
     box-shadow: 0 0 15px var(--accent-color);
+}
+
+/* Titles & Prestige */
+.title-tag {
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    vertical-align: middle;
+}
+
+.profile-title-tag {
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-bottom: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.titles-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.8rem;
+    margin-top: 1rem;
+}
+
+.title-item {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    padding: 0.8rem;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0.5;
+    filter: grayscale(1);
+    position: relative;
+    user-select: none;
+}
+
+.title-item .tier-bonus {
+    display: none;
+}
+
+.title-item.unlocked {
+    opacity: 1;
+    filter: grayscale(0);
+}
+
+.title-item.equipped {
+    border-color: var(--accent-color);
+    background: var(--badge-unlocked-bg);
+    box-shadow: 0 0 15px rgba(129, 140, 248, 0.2);
+}
+
+.title-item.equipped::after {
+    content: '✓';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--accent-color);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.title-item .title-name {
+    font-weight: 800;
+    font-size: 0.9rem;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.title-item .title-requirement {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+/* Title Tiers */
+.tier-common {
+    color: #94a3b8;
+    border-color: #94a3b8 !important;
+}
+
+.tier-rare {
+    color: #60a5fa;
+    border-color: #60a5fa !important;
+}
+
+.tier-epic {
+    color: #c084fc;
+    border-color: #c084fc !important;
+}
+
+.tier-legendary {
+    color: #fbbf24;
+    border-color: #fbbf24 !important;
+    text-shadow: 0 0 5px rgba(251, 191, 36, 0.3);
+    animation: gold-pulse 3s infinite ease-in-out;
+}
+
+@keyframes gold-pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 1px #fbbf24);
+    }
+
+    50% {
+        transform: scale(1.005);
+        filter: drop-shadow(0 0 3px #fbbf24);
+    }
+}
+
+/* Prestige Glow */
+.prestige-glow {
+    animation: prestige-shimmer 3s infinite linear;
+    border-color: var(--accent-color) !important;
+}
+
+@keyframes prestige-shimmer {
+    0% {
+        box-shadow: 0 0 10px rgba(129, 140, 248, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(129, 140, 248, 0.6), 0 0 30px rgba(129, 140, 248, 0.3);
+    }
+
+    100% {
+        box-shadow: 0 0 10px rgba(129, 140, 248, 0.4);
+    }
+}
+
+/* Global Ranking Styles */
+.global-btn {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    color: white !important;
+    border: none !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.global-btn::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transform: rotate(45deg);
+    transition: 0.5s;
+    pointer-events: none;
+}
+
+.global-btn:hover::after {
+    left: 100%;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin: 1.5rem 0;
+    outline: none;
+    transition: all 0.3s ease;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.modal-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
+}
+
+.rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 800;
+    margin-right: 10px;
+}
+
+.rank-1 {
+    background: #fbbf24;
+    color: #78350f;
+}
+
+.rank-2 {
+    background: #94a3b8;
+    color: #1e293b;
+}
+
+.rank-3 {
+    background: #b45309;
+    color: #fff;
+}
+
+.rank-other {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
 }
