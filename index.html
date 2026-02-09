@@ -4,7 +4,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Typing Master</title>
+  <title>Typing Master - The Ultimate Typing RPG & Survival Game</title>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description"
+    content="Master your typing speed with Typing Master! Battle bosses, survive the gauntlet, grow your Zen Garden, and join clans in this epic typing RPG.">
+  <meta name="keywords" content="typing game, typing test, wpm, rpg, zen garden, coding, gamified learning">
+  <meta name="author" content="Typing Master Team">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Typing Master - The Ultimate Typing RPG">
+  <meta property="og:description"
+    content="Battle bosses, grow gardens, and compete globally in the most gamified typing test ever built.">
+  <meta property="og:image" content="logo.png">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:title" content="Typing Master - The Ultimate Typing RPG">
+  <meta property="twitter:description" content="Master your speed, unlock pets, and join clans.">
+  <meta property="twitter:image" content="logo.png">
+
   <link rel="shortcut icon" href="logo.png" type="image/x-icon">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -19,6 +39,8 @@
       <li><a href="#test-section" class="nav-link active">Test</a></li>
       <li><a href="#achievements-section" class="nav-link">Achievements</a></li>
       <li><a href="#leaderboard-section" class="nav-link">Leaderboard</a></li>
+      <li><a href="#shop-section" class="nav-link">Shop</a></li>
+      <li><a href="#clans-section" class="nav-link">Clans</a></li>
       <li><a href="#stats-section" class="nav-link">History</a></li>
     </ul>
     <div class="level-container" title="Your Typing Level">
@@ -28,11 +50,19 @@
         <div id="xp-bar-inner" class="xp-bar-inner"></div>
       </div>
     </div>
+    <div class="bits-display" title="Your Bits (Currency)">
+      <span class="bits-icon">🪙</span>
+      <span id="nav-bits-count">0</span>
+    </div>
     <div class="nav-actions">
       <button id="theme-toggle" class="theme-toggle" title="Toggle Theme">🌙</button>
       <button id="profile-btn" class="theme-toggle" title="View Profile">👤</button>
     </div>
   </nav>
+
+  <div id="pet-container" class="pet-container hidden-section" title="Your Companion">
+    <div id="active-pet" class="pet-sprite">🦉</div>
+  </div>
 
   <main>
     <div class="main-container">
@@ -59,6 +89,8 @@
           <select id="mode" title="Mode">
             <option value="normal">Normal</option>
             <option value="no-error">No Error Mode</option>
+            <option value="battle">Battle Mode (RPG)</option>
+            <option value="gauntlet">Gauntlet Mode (Survival)</option>
             <option value="custom">Custom Text</option>
           </select>
           <select id="keyboard-layout" title="Keyboard Layout">
@@ -90,6 +122,27 @@
         <div id="countdown-container" class="countdown-container hidden-section">
           <div id="countdown-number" class="countdown-number">3</div>
           <div class="countdown-text">Get Ready!</div>
+        </div>
+
+        <!-- RPG Battle UI -->
+        <div id="battle-ui" class="hidden-section glass-panel" style="margin-bottom: 2rem; padding: 1.5rem;">
+          <div class="boss-area">
+            <div id="boss-sprite" class="boss-sprite">👹</div>
+            <div class="boss-info">
+              <div class="boss-name">The Typo King</div>
+              <div class="hp-bar-outer boss-hp">
+                <div id="boss-hp-inner" class="hp-bar-inner danger" style="width: 100%;"></div>
+              </div>
+            </div>
+          </div>
+          <div class="battle-stats">
+            <div class="player-hp-container">
+              <div class="label">Your Health</div>
+              <div class="hp-bar-outer player-hp">
+                <div id="player-hp-inner" class="hp-bar-inner success" style="width: 100%;"></div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div id="stats-container" class="glass-panel">
@@ -158,6 +211,21 @@
         </div>
       </section>
 
+      <!-- Shop Section -->
+      <section id="shop-section" class="hidden-section">
+        <div class="section-header">
+          <h1>Premium <span>Shop</span></h1>
+          <p style="margin-top: 5px;">Spend your Bits on exclusive themes, auras, and companions.</p>
+        </div>
+        <div class="bits-balance-card glass-panel">
+          <div class="label">Total Balance</div>
+          <div class="balance-value"><span class="bits-icon">🪙</span> <span id="shop-bits-count">0</span> Bits</div>
+        </div>
+        <div class="shop-grid" id="shop-items-grid">
+          <!-- Shop items dynamically generated -->
+        </div>
+      </section>
+
       <!-- Leaderboard Section -->
       <section id="leaderboard-section" class="hidden-section">
         <h2>Local Leaderboard</h2>
@@ -184,6 +252,83 @@
         </div>
         <div id="history-list">
           <!-- History items will be inserted here by JS -->
+        </div>
+      </section>
+
+      <!-- Clans Section -->
+      <section id="clans-section" class="hidden-section">
+        <div class="clan-main-container">
+          <!-- Clan Selection (If not in clan) -->
+          <div id="clan-not-joined" class="clan-overview">
+            <h2>Clan Strongholds</h2>
+            <p class="subtitle">Join forces with other typists to unlock exclusive rewards.</p>
+
+            <div class="clan-actions-grid">
+              <div class="profile-card glass-panel">
+                <h3>Create a Clan</h3>
+                <p>Lead your own stronghold.</p>
+                <div class="input-group">
+                  <input type="text" id="create-clan-name" placeholder="Clan Name (3-12 chars)" maxlength="12">
+                  <button id="btn-create-clan" class="shop-btn buy">Create (1000 🪙)</button>
+                </div>
+              </div>
+
+              <div class="profile-card glass-panel">
+                <h3>Find Clans</h3>
+                <p>Join an existing stronghold.</p>
+                <div id="clans-discovery-list" class="discovery-list">
+                  <!-- Public clans will be shown here -->
+                  <div class="empty-state">No public clans found yet.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Clan Dashboard (If in clan) -->
+          <div id="clan-joined" class="clan-dashboard hidden-section">
+            <div class="clan-header-ui">
+              <div class="clan-banner-large" id="clan-banner-display">🚩</div>
+              <div class="clan-titles">
+                <h2 id="clan-name-display">Clan Name</h2>
+                <div id="clan-level-tag" class="mode-tag">Stronghold Level 1</div>
+              </div>
+              <button id="btn-leave-clan" class="icon-btn danger">Leave Clan</button>
+            </div>
+
+            <div class="clan-grid">
+              <!-- Shared Progress -->
+              <div class="profile-card glass-panel full-width">
+                <h3>Shared Stronghold Progress</h3>
+                <div class="progress-container">
+                  <div class="progress-labels">
+                    <span id="clan-milestone-label">Milestone: 0 / 100,000 words</span>
+                    <span id="clan-progress-percent">0%</span>
+                  </div>
+                  <div class="xp-bar-outer">
+                    <div id="clan-progress-bar" class="xp-bar-inner" style="width: 0%;"></div>
+                  </div>
+                </div>
+                <p class="subtitle">Next Unlock: <span id="clan-next-unlock">Shared Bronze Banner</span></p>
+              </div>
+
+              <!-- Shared Pet -->
+              <div class="profile-card glass-panel">
+                <h3>Shared Guardian</h3>
+                <div class="clan-hall-pet">
+                  <div id="clan-shared-pet" class="clan-pet-display">🥚</div>
+                  <p id="clan-pet-status">Unlocks at Milestone 1</p>
+                </div>
+              </div>
+
+              <!-- Clan Hall -->
+              <div class="profile-card glass-panel">
+                <h3>Clan Hall</h3>
+                <div id="clan-member-list" class="member-list">
+                  <!-- Members listed here -->
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -255,6 +400,18 @@
                 <span class="difficulty-label">Hard</span>
                 <span id="pb-hard" class="pb-value">0 WPM</span>
               </div>
+            </div>
+          </div>
+
+          <!-- Zen Garden Card -->
+          <div class="profile-card zen-garden-card glass-panel full-width">
+            <div class="garden-header">
+              <h3>Your Zen Garden</h3>
+              <span id="garden-milestone-text" class="subtitle">0 words typed towards next milestone</span>
+            </div>
+            <div id="zen-garden-canvas" class="garden-area">
+              <!-- Garden items will be generated here -->
+              <div class="garden-ground"></div>
             </div>
           </div>
         </div>

@@ -164,6 +164,397 @@
         }
     }
 
+    // ============= Economy & Shop Configuration =============
+    const SHOP_ITEMS = [
+        { id: 'theme-nord', name: 'Nordic Chill', type: 'theme', price: 500, icon: '❄️', desc: 'A cool, frost-blue theme for focused typing.', tag: 'New' },
+        { id: 'theme-sunset', name: 'Desert Sunset', type: 'theme', price: 500, icon: '🌅', desc: 'Warm gradients to soothe your eyes.', tag: 'Exclusive' },
+        { id: 'aura-gold', name: 'Gold Aura', type: 'aura', price: 1000, icon: '✨', desc: 'A radiant golden glow for your profile.', tag: 'Premium' },
+        { id: 'pet-owl', name: 'Wise Owl', type: 'pet', price: 2000, icon: '🦉', desc: 'A guardian that watches your accuracy.', tag: 'Companion' },
+        { id: 'pet-dragon', name: 'Fire Drake', type: 'pet', price: 5000, icon: '🐉', desc: 'An epic pet that loves high speed.', tag: 'Legendary' }
+    ];
+
+    const Economy = {
+        getBits: function () {
+            return parseInt(localStorage.getItem('userBits')) || 0;
+        },
+        addBits: function (amount) {
+            const current = this.getBits();
+            localStorage.setItem('userBits', current + amount);
+            this.updateUI();
+        },
+        spendBits: function (amount) {
+            const current = this.getBits();
+            if (current >= amount) {
+                localStorage.setItem('userBits', current - amount);
+                this.updateUI();
+                return true;
+            }
+            return false;
+        },
+        updateUI: function () {
+            const bits = this.getBits();
+            const navBits = document.getElementById('nav-bits-count');
+            const shopBits = document.getElementById('shop-bits-count');
+            if (navBits) navBits.innerText = bits.toLocaleString();
+            if (shopBits) shopBits.innerText = bits.toLocaleString();
+        }
+    };
+
+    const Shop = {
+        getPurchasedItems: function () {
+            return JSON.parse(localStorage.getItem('purchasedItems')) || [];
+        },
+        buyItem: function (itemId) {
+            const item = SHOP_ITEMS.find(i => i.id === itemId);
+            if (!item) return;
+
+            if (this.getPurchasedItems().includes(itemId)) {
+                showToast('Item already owned!');
+                return;
+            }
+
+            if (Economy.spendBits(item.price)) {
+                const purchased = this.getPurchasedItems();
+                purchased.push(itemId);
+                localStorage.setItem('purchasedItems', JSON.stringify(purchased));
+                this.render();
+                showToast(`Purchased ${item.name}!`);
+            } else {
+                showToast('Not enough Bits!', false);
+            }
+        },
+        equipItem: function (itemId) {
+            const item = SHOP_ITEMS.find(i => i.id === itemId);
+            if (!item) return;
+
+            if (item.type === 'theme') {
+                localStorage.setItem('equippedTheme', itemId);
+                this.applyTheme(itemId);
+            } else if (item.type === 'aura') {
+                localStorage.setItem('equippedAura', itemId);
+                this.applyAura(itemId);
+            } else if (item.type === 'pet') {
+                localStorage.setItem('equippedPet', itemId);
+                this.applyPet(itemId);
+            }
+
+            this.render();
+            showToast(`${item.name} equipped!`);
+        },
+        applyTheme: function (itemId) {
+            // Simplified theme application - could be expanded to real CSS variable swaps
+            if (itemId === 'theme-nord') {
+                document.documentElement.style.setProperty('--accent-color', '#88c0d0');
+            } else if (itemId === 'theme-sunset') {
+                document.documentElement.style.setProperty('--accent-color', '#fb923c');
+            }
+        },
+        applyAura: function (itemId) {
+            const card = document.querySelector('.profile-card');
+            if (!card) return;
+            card.classList.remove('aura-gold', 'aura-nord');
+            if (itemId === 'aura-gold') card.classList.add('aura-gold');
+            else if (itemId === 'aura-nord') card.classList.add('aura-nord');
+        },
+        applyPet: function (itemId) {
+            const container = document.getElementById('pet-container');
+            const sprite = document.getElementById('active-pet');
+            if (!container || !sprite) return;
+
+            const item = SHOP_ITEMS.find(i => i.id === itemId);
+            if (item) {
+                container.classList.remove('hidden-section');
+                sprite.innerText = item.icon;
+                sprite.classList.add('pet-happy');
+                setTimeout(() => sprite.classList.remove('pet-happy'), 1000);
+            } else {
+                container.classList.add('hidden-section');
+            }
+        },
+        initEquipped: function () {
+            const theme = localStorage.getItem('equippedTheme');
+            const aura = localStorage.getItem('equippedAura');
+            const pet = localStorage.getItem('equippedPet');
+
+            if (theme) this.applyTheme(theme);
+            if (aura) this.applyAura(aura);
+            if (pet) this.applyPet(pet);
+        },
+        render: function () {
+            const grid = document.getElementById('shop-items-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const purchased = this.getPurchasedItems();
+            const equippedTheme = localStorage.getItem('equippedTheme');
+            const equippedAura = localStorage.getItem('equippedAura');
+            const equippedPet = localStorage.getItem('equippedPet');
+
+            SHOP_ITEMS.forEach(item => {
+                const isOwned = purchased.includes(item.id);
+                const isEquipped = item.id === equippedTheme || item.id === equippedAura || item.id === equippedPet;
+
+                const card = document.createElement('div');
+                card.className = 'shop-item';
+                card.innerHTML = `
+                    ${item.tag ? `<span class="item-tag ${item.tag === 'New' ? 'tag-new' : ''}">${item.tag}</span>` : ''}
+                    <div class="item-icon">${item.icon}</div>
+                    <h3>${item.name}</h3>
+                    <p class="item-desc">${item.desc}</p>
+                    <div class="item-price">${isOwned ? (isEquipped ? 'Equipped' : 'Owned') : `🪙 ${item.price}`}</div>
+                    <button class="shop-btn ${isOwned ? (isEquipped ? 'equipped' : 'buy') : 'buy'}">
+                        ${isOwned ? (isEquipped ? 'Currently Equipped' : 'Equip Item') : 'Buy Now'}
+                    </button>
+                `;
+
+                const btn = card.querySelector('button');
+                if (!isOwned) {
+                    btn.addEventListener('click', () => this.buyItem(item.id));
+                } else if (!isEquipped) {
+                    btn.addEventListener('click', () => this.equipItem(item.id));
+                }
+
+                grid.appendChild(card);
+            });
+        }
+    };
+
+    // ============= Shop Logic =============
+    const BattleEngine = {
+        bossMaxHP: 100,
+        bossCurrentHP: 100,
+        playerMaxHP: 100,
+        playerCurrentHP: 100,
+        isActive: false,
+
+        init: function (textLength) {
+            this.isActive = modeSelect.value === 'battle';
+            const battleUI = document.getElementById('battle-ui');
+
+            if (this.isActive) {
+                battleUI.classList.remove('hidden-section');
+                this.bossMaxHP = textLength;
+                this.bossCurrentHP = textLength;
+                this.playerMaxHP = 100;
+                this.playerCurrentHP = 100;
+                this.updateUI();
+                document.getElementById('boss-sprite').innerText = '👹';
+            } else {
+                battleUI.classList.add('hidden-section');
+            }
+        },
+
+        damageBoss: function (amount) {
+            if (!this.isActive) return;
+            this.bossCurrentHP = Math.max(0, this.bossCurrentHP - amount);
+            this.updateUI();
+
+            const sprite = document.getElementById('boss-sprite');
+            sprite.classList.add('boss-damage-anim');
+            setTimeout(() => sprite.classList.remove('boss-damage-anim'), 500);
+
+            if (this.bossCurrentHP <= 0) {
+                document.getElementById('boss-sprite').innerText = '💀';
+                finishTest(); // Win!
+            }
+        },
+
+        damagePlayer: function (amount) {
+            if (!this.isActive) return;
+            this.playerCurrentHP = Math.max(0, this.playerCurrentHP - amount);
+            this.updateUI();
+
+            if (this.playerCurrentHP <= 0) {
+                this.isActive = false; // Stop engine
+                showToast('You were defeated by the boss!', false);
+                finishTest(true); // Loss
+            }
+        },
+
+        updateUI: function () {
+            const bossPct = (this.bossCurrentHP / this.bossMaxHP) * 100;
+            const playerPct = (this.playerCurrentHP / this.playerMaxHP) * 100;
+
+            document.getElementById('boss-hp-inner').style.width = bossPct + '%';
+            document.getElementById('player-hp-inner').style.width = playerPct + '%';
+        }
+    };
+
+    // ============= Zen Garden Logic =============
+    const Garden = {
+        MILESTONE: 10000,
+        symbols: ['🌳', '⛲', '🪨', '🌿', '🍄', '🪵', '🌺', '🌲'],
+        eliteSymbols: ['🏮', '🔥', '💎', '⛩️', '🌠', '🛸'],
+
+        getWords: function () {
+            return parseFloat(localStorage.getItem('totalWordsTyped')) || 0;
+        },
+        addWords: function (amount) {
+            const current = this.getWords();
+            const total = current + amount;
+            localStorage.setItem('totalWordsTyped', total);
+            this.updateUI();
+        },
+        updateUI: function () {
+            const total = this.getWords();
+            const milestoneText = document.getElementById('garden-milestone-text');
+            const canvas = document.getElementById('zen-garden-canvas');
+            if (!milestoneText || !canvas) return;
+
+            const nextMilestone = (Math.floor(total / this.MILESTONE) + 1) * this.MILESTONE;
+            const remaining = Math.round(nextMilestone - total);
+            milestoneText.innerText = `${remaining.toLocaleString()} words to next upgrade`;
+
+            this.render();
+        },
+        render: function () {
+            const canvas = document.getElementById('zen-garden-canvas');
+            if (!canvas) return;
+
+            // Remove existing items (except ground)
+            canvas.querySelectorAll('.garden-item, .garden-dragon').forEach(el => el.remove());
+
+            const total = this.getWords();
+            const itemCount = Math.min(Math.floor(total / this.MILESTONE), 50); // Cap at 50 visual items
+
+            const history = JSON.parse(localStorage.getItem('typingHistory')) || [];
+            const bestWPM = history.reduce((max, r) => Math.max(max, r.wpm), 0);
+            const isElite = bestWPM >= 100;
+
+            for (let i = 0; i < itemCount; i++) {
+                const item = document.createElement('div');
+                item.className = 'garden-item';
+
+                const pool = isElite ? [...this.symbols, ...this.eliteSymbols] : this.symbols;
+                item.innerText = pool[i % pool.length];
+
+                if (isElite && this.eliteSymbols.includes(item.innerText)) {
+                    item.classList.add('prestige-flora');
+                }
+
+                // Random positioning
+                const left = (10 + (i * 137) % 80) + '%';
+                const scale = 0.5 + (Math.random() * 0.5);
+                item.style.left = left;
+                item.style.transform = `scale(${scale})`;
+
+                canvas.appendChild(item);
+            }
+
+            if (isElite) {
+                const dragon = document.createElement('div');
+                dragon.className = 'garden-dragon';
+                dragon.innerText = '🐉';
+                canvas.appendChild(dragon);
+            }
+        }
+    };
+
+    // ============= Clan Strongholds Logic =============
+    const Clan = {
+        MILESTONES: [
+            { words: 10000, name: 'Shared Bronze Banner', icon: '🚩', pet: '🥚' },
+            { words: 50000, name: 'Shared Silver Banner', icon: '🥈', pet: '🐥' },
+            { words: 150000, name: 'Shared Gold Banner', icon: '🥇', pet: '🦅' },
+            { words: 500000, name: 'Stronghold Guardian', icon: '🏰', pet: '🐲' }
+        ],
+
+        getJoinedClan: function () {
+            return JSON.parse(localStorage.getItem('userClan')) || null;
+        },
+
+        createClan: function (name) {
+            if (name.length < 3 || name.length > 12) {
+                showToast('Name must be 3-12 characters.', false);
+                return;
+            }
+
+            if (Economy.spendBits(1000)) {
+                const newClan = {
+                    name: name,
+                    banner: '🚩',
+                    totalWords: 0,
+                    members: [{ name: localStorage.getItem('globalUsername') || 'You', wpm: 0 }]
+                };
+                localStorage.setItem('userClan', JSON.stringify(newClan));
+                this.updateUI();
+                showToast(`Clan "${name}" created! 🏰`);
+            } else {
+                showToast('Not enough bits! (1000 required)', false);
+            }
+        },
+
+        leaveClan: function () {
+            localStorage.removeItem('userClan');
+            this.updateUI();
+            showToast('You left the clan.');
+        },
+
+        addWords: function (amount) {
+            const clan = this.getJoinedClan();
+            if (clan) {
+                clan.totalWords += amount;
+                localStorage.setItem('userClan', JSON.stringify(clan));
+                this.updateUI();
+            }
+        },
+
+        updateUI: function () {
+            const clan = this.getJoinedClan();
+            const notJoined = document.getElementById('clan-not-joined');
+            const joined = document.getElementById('clan-joined');
+
+            if (!clan) {
+                notJoined.classList.remove('hidden-section');
+                joined.classList.add('hidden-section');
+                return;
+            }
+
+            notJoined.classList.add('hidden-section');
+            joined.classList.remove('hidden-section');
+
+            document.getElementById('clan-name-display').innerText = clan.name;
+
+            // Progress
+            const milestone = this.MILESTONES.find(m => clan.totalWords < m.words) || this.MILESTONES[this.MILESTONES.length - 1];
+            const prevMilestoneWords = this.MILESTONES[this.MILESTONES.indexOf(milestone) - 1]?.words || 0;
+            const progress = ((clan.totalWords - prevMilestoneWords) / (milestone.words - prevMilestoneWords)) * 100;
+
+            document.getElementById('clan-milestone-label').innerText = `Milestone: ${Math.floor(clan.totalWords).toLocaleString()} / ${milestone.words.toLocaleString()} words`;
+            document.getElementById('clan-progress-percent').innerText = `${Math.floor(progress)}%`;
+            document.getElementById('clan-progress-bar').style.width = `${progress}%`;
+            document.getElementById('clan-next-unlock').innerText = milestone.name;
+
+            // Visuals
+            const currentLevel = this.MILESTONES.filter(m => clan.totalWords >= m.words).length;
+            document.getElementById('clan-level-tag').innerText = `Stronghold Level ${currentLevel + 1}`;
+
+            const earnedMilestone = this.MILESTONES[currentLevel - 1];
+            if (earnedMilestone) {
+                document.getElementById('clan-banner-display').innerText = earnedMilestone.icon;
+                document.getElementById('clan-shared-pet').innerText = earnedMilestone.pet;
+                document.getElementById('clan-pet-status').innerText = `Guardian: ${earnedMilestone.name} Active`;
+            } else {
+                document.getElementById('clan-banner-display').innerText = '🚩';
+                document.getElementById('clan-shared-pet').innerText = '🥚';
+                document.getElementById('clan-pet-status').innerText = 'Guardian: Unlocks at Milestone 1';
+            }
+
+            this.renderMembers(clan.members);
+        },
+
+        renderMembers: function (members) {
+            const list = document.getElementById('clan-member-list');
+            list.innerHTML = '';
+            members.forEach(m => {
+                const el = document.createElement('div');
+                el.className = 'member-card';
+                el.innerHTML = `<span>👤 ${m.name}</span> <span class="mode-tag">${m.wpm} WPM</span>`;
+                list.appendChild(el);
+            });
+        }
+    };
+
     // ============= Global Leaderboard Logic =============
     const GlobalLeaderboard = {
         saveScore: async function (wpm, accuracy, difficulty) {
@@ -749,7 +1140,12 @@
 
             const difficulty = difficultySelect.value;
             const language = languageSelect.value;
-            testDuration = durationSelect.value === 'unlimited' ? null : parseInt(durationSelect.value);
+
+            if (modeSelect.value === 'gauntlet') {
+                testDuration = 10; // Start with 10s
+            } else {
+                testDuration = durationSelect.value === 'unlimited' ? null : parseInt(durationSelect.value);
+            }
 
             let textToUse = currentCustomText;
             if (modeSelect.value === 'custom') {
@@ -817,6 +1213,9 @@
                 currentPR = null;
                 ghostPace = 0;
             }
+
+            // Battle Mode Init
+            BattleEngine.init(textToUse.length);
         } catch (error) {
             console.error("Init Error:", error);
             alert("Error starting test: " + error.message);
@@ -828,6 +1227,9 @@
         timer = null;
         secondsPassed = 0;
         inputArea.value = '';
+        inputArea.disabled = false;
+        inputArea.focus();
+
         time_container.innerText = '0';
         wpm_container.innerText = '0';
         accuracy_container.innerText = '0%';
@@ -851,6 +1253,12 @@
                 if (testDuration) {
                     const remaining = Math.max(0, testDuration - secondsPassed);
                     timerDisplay.innerText = remaining;
+
+                    if (remaining <= 5) {
+                        timerDisplay.classList.add('gauntlet-warning');
+                    } else {
+                        timerDisplay.classList.remove('gauntlet-warning');
+                    }
 
                     if (remaining <= 0) {
                         finishTest();
@@ -888,16 +1296,18 @@
         let correctCount = 0;
         let wrongCount = 0;
         let lastWasCorrect = true;
+        const currentIndex = inputChars.length - 1;
 
         for (let index = 0; index < spanArray.length; index++) {
             const span = spanArray[index];
             const typedChar = inputChars[index];
+            const expectedChar = span.innerText;
 
             span.className = '';
 
             if (typedChar === undefined) {
                 // Not typed yet
-            } else if (typedChar === span.innerText) {
+            } else if (typedChar === expectedChar) {
                 span.classList.add('correct');
                 if (blindMode) span.style.visibility = 'visible';
                 if (index === inputChars.length - 1) {
@@ -909,6 +1319,19 @@
                 if (!keyPressTimes[key]) keyPressTimes[key] = [];
                 keyPressTimes[key].push(100);
                 lastWasCorrect = true;
+
+                // Only damage boss if this is the character we just typed
+                if (BattleEngine.isActive && index === currentIndex) {
+                    BattleEngine.damageBoss(1);
+                }
+
+                // Gauntlet Time Gain
+                if (modeSelect.value === 'gauntlet' && index === currentIndex) {
+                    if (expectedChar === ' ' || index === spanArray.length - 1) {
+                        testDuration += 2;
+                        showTimeGain('+2s');
+                    }
+                }
             } else {
                 span.classList.add('wrong');
                 if (index === inputChars.length - 1) {
@@ -917,7 +1340,13 @@
                 wrongCount++;
                 lastWasCorrect = false;
 
-                if (noErrorMode) {
+                // Only damage player if this is the character we just typed
+                if (BattleEngine.isActive && index === currentIndex) {
+                    BattleEngine.damagePlayer(5);
+                    if (noErrorMode) finishTest(true);
+                }
+
+                if (noErrorMode && !BattleEngine.isActive) { // Apply noErrorMode only if not in battle mode
                     showVignette('error');
                     isTestActive = false;
                     finishTest();
@@ -938,7 +1367,7 @@
             if (secondsPassed > 0) {
                 const timeInMinutes = secondsPassed / 60;
                 const liveCPM = Math.round(inputChars.length / timeInMinutes);
-                const liveWPM = Math.round((correctChars / 5) / timeInMinutes);
+                const liveWPM = Math.round((correctCount / 5) / timeInMinutes); // Use correctCount here
                 cpm_container.innerText = liveCPM;
                 wpm_container.innerText = liveWPM;
                 velocityDisplay.innerText = liveWPM + ' WPM';
@@ -970,10 +1399,33 @@
         }
     }
 
-    function finishTest() {
+    function showTimeGain(text) {
+        const popup = document.createElement('div');
+        popup.className = 'time-gain-popup';
+        popup.innerText = text;
+
+        const timerRect = timerDisplay.getBoundingClientRect();
+        popup.style.left = (timerRect.left + 20) + 'px';
+        popup.style.top = (timerRect.top - 20) + 'px';
+
+        document.body.appendChild(popup);
+        setTimeout(() => popup.remove(), 1000);
+    }
+
+    function finishTest(isLoss = false) { // Modified to accept isLoss parameter
         clearInterval(timer);
         isTestActive = false;
         testInProgress = false;
+        inputArea.disabled = true; // Disable input on finish
+
+        if (isLoss) {
+            showVignette('error');
+            if (BattleEngine.isActive) {
+                document.getElementById('boss-sprite').innerText = '👹'; // Reset sprite
+            }
+            setTimeout(() => navigate('test'), 2000); // Navigate back to test selection
+            return;
+        }
 
         const spanArray = paragraphBox.querySelectorAll('span');
         const correctChars = paragraphBox.querySelectorAll('.correct').length;
@@ -1023,6 +1475,21 @@
         UserProfile.unlockTitles();
         UserProfile.updateUI();
 
+        // Award Bits
+        let bitsEarned = Math.floor(testResult.wpm * (testResult.accuracy / 100));
+
+        // Gauntlet Bonus (Bonus Bits based on survival time)
+        if (modeSelect.value === 'gauntlet') {
+            const survivalBonus = Math.floor(secondsPassed / 30) * 50;
+            if (survivalBonus > 0) {
+                bitsEarned += survivalBonus;
+                showToast(`Survival Bonus: +${survivalBonus} Bits! 🛡️`);
+            }
+        }
+
+        Economy.addBits(bitsEarned);
+        showToast(`Earned ${bitsEarned} Bits! 🪙`);
+
         // Push to Global Leaderboard if configured
         if (supabase) {
             const bestWPM = history.reduce((max, r) => Math.max(max, r.wpm), 0);
@@ -1036,6 +1503,11 @@
 
         document.body.classList.remove('zen-mode-active');
         showVignette('success');
+
+        // Track Total Words
+        const wordsInTest = correctChars / 5; // Simplified word count
+        Garden.addWords(wordsInTest);
+        Clan.addWords(wordsInTest);
     }
 
     function saveTestResult(result) {
@@ -1259,6 +1731,14 @@
         } else if (section === 'profile') {
             document.getElementById('profile-section').classList.remove('hidden-section');
             UserProfile.updateUI();
+            Garden.updateUI();
+        } else if (section === 'shop') {
+            document.getElementById('shop-section').classList.remove('hidden-section');
+            Shop.render();
+            Economy.updateUI();
+        } else if (section === 'clans') {
+            document.getElementById('clans-section').classList.remove('hidden-section');
+            Clan.updateUI();
         }
     }
 
@@ -1269,6 +1749,17 @@
     profileBtn.addEventListener('click', () => {
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
         navigate('profile');
+    });
+
+    document.getElementById('btn-create-clan').addEventListener('click', () => {
+        const name = document.getElementById('create-clan-name').value.trim();
+        Clan.createClan(name);
+    });
+
+    document.getElementById('btn-leave-clan').addEventListener('click', () => {
+        if (confirm('Are you sure you want to leave your clan? All shared progress will be lost.')) {
+            Clan.leaveClan();
+        }
     });
     // ============= Avatar Modal Logic =============
     const avatarModal = document.getElementById('avatar-modal');
@@ -1389,6 +1880,8 @@
             else if (targetId === '#profile-section') navigate('profile');
             else if (targetId === '#achievements-section') navigate('achievements');
             else if (targetId === '#leaderboard-section') navigate('leaderboard');
+            else if (targetId === '#shop-section') navigate('shop');
+            else if (targetId === '#clans-section') navigate('clans');
             else if (targetId === '#stats-section') navigate('stats');
         });
     });
@@ -1412,4 +1905,8 @@
     updateLevelingSystem(0); // Initialize UI without adding XP
     UserProfile.unlockTitles();
     UserProfile.updateUI();
+    Economy.updateUI();
+    Garden.updateUI();
+    Clan.updateUI();
+    Shop.initEquipped();
 })();
