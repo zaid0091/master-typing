@@ -1,184 +1,147 @@
-# ⌨️ Typing Master
+# Typing Master
 
-A modern, feature-rich typing speed test application with beautiful UI, achievements system, and comprehensive statistics tracking.
+A modern typing speed test application with user accounts, achievements, clans, a cosmetic shop, and comprehensive statistics tracking.
 
-![Typing Master](logo.png)
+**Live:** [master-typing-steel.vercel.app](https://master-typing-steel.vercel.app)
 
-## ✨ Features
+## Features
 
-### 🎯 Core Functionality
-- **Real-time WPM & CPM tracking** - Monitor your typing speed as you type
-- **Accuracy measurement** - Track your typing precision
-- **Multiple difficulty levels** - Easy, Medium, and Hard
-- **Flexible test durations** - 15s, 30s, 60s, or Unlimited
-- **Live velocity display** - See your current typing speed in real-time
+### Core Typing Test
+- Real-time WPM, CPM, and accuracy tracking
+- Multiple difficulty levels (Easy, Medium, Hard)
+- Flexible test durations (15s, 30s, 60s, Unlimited)
+- Multiple text types: English, Motivational, Technical Code, Custom
+- Special modes: Normal, No Error, Blind
 
-### 🎨 Content Variety
-- **Multiple text types**:
-  - English - Standard typing practice
-  - Motivational - Inspirational quotes
-  - Technical Code - Programming-related content
-- **Custom text mode** - Practice with your own text
+### Accounts & Progression
+- User registration and login
+- XP and leveling system
+- Bits (currency) earned from tests
+- Avatar selection
+- Equipped titles, themes, auras, and pets
 
-### 🎮 Special Modes
-- **Normal Mode** - Standard typing test
-- **No Error Mode** - Test ends on first mistake (hardcore!)
-- **Blind Mode** - Text reveals as you type correctly
-- **Custom Text** - Use your own practice material
+### Shop
+- Cosmetic items purchasable with Bits
+- Themes, auras, pets, and titles
 
-### 🏆 Achievements & Gamification
-- **6 Unlockable Badges**:
-  - 🌱 Getting Started - Complete your first test
-  - ⚡ Speed Demon - Reach 100+ WPM
-  - 🚀 Speedster - Reach 120+ WPM
-  - 🎯 Perfect - Achieve 99%+ accuracy
-  - 🏃 Marathon - Complete a 2-minute test
-  - 📊 Consistent - Maintain 95%+ accuracy 3 times
+### Clans
+- Create or join clans
+- Clan chat and member management
+- Clan leaderboards
 
-### 📊 Statistics & Tracking
-- **Comprehensive History** - All your test results saved locally
-- **Personal Records** - Track your best WPM
-- **Daily Streaks** - Maintain your practice consistency
-- **Local Leaderboard** - Compare your best performances
-- **Export to CSV** - Download your typing history
+### Leaderboard
+- Global rankings by WPM
+- Filter by time period
 
-### 🎨 User Experience
-- **Dark/Light Theme** - Toggle between themes
-- **Keyboard Heatmap** - Visualize your most-used keys
-- **Live Coach Tips** - Get real-time improvement suggestions
-- **Sound Effects** - Optional audio feedback (can be toggled)
-- **Smooth Animations** - Polished UI with fireworks on completion
-- **3D Background** - Dynamic Three.js visual effects
-- **Responsive Design** - Works on desktop and mobile
+### Achievements
+- Unlockable badges based on performance
+- Speed, accuracy, endurance, and consistency milestones
 
-### ⌨️ Keyboard Layouts
-- QWERTY (default)
-- Dvorak
-- Colemak
+### Statistics & History
+- Full test history with detailed results
+- Personal records tracking
+- Daily streaks
 
-## 🚀 Getting Started
+### UI/UX
+- Dark/Light theme toggle
+- Keyboard heatmap visualization
+- Live coach tips
+- Sound effects (toggleable)
+- 3D particle background (Three.js)
+- Confetti animations on completion
+- Responsive design
 
-### Prerequisites
-- A modern web browser (Chrome, Firefox, Safari, Edge)
-- No installation or build process required!
+## Tech Stack
 
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/zaid0091/typing-master.git
-   cd typing-master
-   ```
-
-2. **Open in browser**
-   ```bash
-   # Simply open index.html in your browser
-   # Or use a local server (recommended):
-   
-   # Using Python 3
-   python -m http.server 8000
-   
-   # Using Node.js (http-server)
-   npx http-server
-   ```
-
-3. **Start typing!**
-   - Navigate to `http://localhost:8000` (if using local server)
-   - Or just double-click `index.html`
-
-## 📖 Usage
-
-1. **Configure Your Test**
-   - Select difficulty level (Easy/Medium/Hard)
-   - Choose duration (15s/30s/60s/Unlimited)
-   - Pick text type (English/Motivational/Technical)
-   - Select mode (Normal/No Error/Blind/Custom)
-
-2. **Start Typing**
-   - Click "Start Test" button
-   - Wait for the 3-2-1 countdown
-   - Type the displayed text as accurately and quickly as possible
-
-3. **View Results**
-   - See your WPM, CPM, accuracy, and errors
-   - Check if you unlocked any achievements
-   - Review your performance in the History section
-
-4. **Track Progress**
-   - Navigate to **Achievements** to see unlocked badges
-   - Check **Leaderboard** for your top scores
-   - View **History** for detailed test records
-   - Export your data for external analysis
-
-## 🛠️ Technology Stack
-
-- **HTML5** - Semantic markup
-- **CSS3** - Modern styling with CSS variables, gradients, and animations
-- **Vanilla JavaScript** - No frameworks, pure ES6+
+### Frontend
+- **React 19** with Vite
 - **Three.js** - 3D background effects
-- **Lenis** - Smooth scrolling
 - **Canvas Confetti** - Celebration animations
-- **LocalStorage API** - Client-side data persistence
+- Deployed on **Vercel**
 
-## 📁 Project Structure
+### Backend
+- **Django 5** with Django REST Framework
+- **SQLite** (development) / **PostgreSQL** (production)
+- **django-cors-headers** for cross-origin requests
+- **Gunicorn** + **WhiteNoise** for production serving
+- Deployed on **PythonAnywhere**
+
+### Backend Apps
+| App | Purpose |
+|-----|---------|
+| `accounts` | User registration, login, profiles, XP/Bits |
+| `typing_tests` | Test submission and result storage |
+| `leaderboard` | Global rankings |
+| `shop` | Cosmetic items and purchases |
+| `clans` | Clan creation, membership, chat |
+
+## Project Structure
 
 ```
 typing-master/
-├── index.html          # Main HTML structure
-├── style.css           # All styles and themes
-├── script.js           # Core typing test logic
-├── visuals.js          # 3D background effects
-├── logo.png            # Application logo
-└── README.md           # This file
+├── frontend/                # React + Vite SPA
+│   ├── src/
+│   │   ├── components/      # React components
+│   │   ├── context/         # React context providers
+│   │   ├── data/            # Static data (texts, items)
+│   │   ├── hooks/           # Custom React hooks
+│   │   ├── services/        # API client
+│   │   ├── App.jsx          # Root component
+│   │   └── main.jsx         # Entry point
+│   ├── package.json
+│   └── vite.config.js
+├── backend/                 # Django REST API
+│   ├── config/              # Django settings, URLs, WSGI
+│   ├── accounts/            # User accounts app
+│   ├── typing_tests/        # Test results app
+│   ├── leaderboard/         # Leaderboard app
+│   ├── shop/                # Shop app
+│   ├── clans/               # Clans app
+│   ├── manage.py
+│   └── requirements.txt
+├── index.html               # Original standalone version
+├── script.js
+├── style.css
+├── visuals.js
+└── README.md
 ```
 
-## 🎨 Features in Detail
+## Getting Started
 
-### Theme System
-Toggle between dark and light themes with a single click. Themes are persisted across sessions.
+### Prerequisites
+- Node.js 18+ (or Bun)
+- Python 3.10+
 
-### Achievement System
-Achievements are tracked in localStorage and unlock based on your performance:
-- Speed-based achievements (100+ WPM, 120+ WPM)
-- Accuracy achievements (99%+ accuracy)
-- Endurance achievements (2-minute tests)
-- Consistency tracking
+### Frontend
 
-### Data Persistence
-All your data is stored locally in your browser:
-- Test history
-- Achievement progress
-- Personal records
-- Daily streaks
-- Theme preference
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-### Keyboard Heatmap
-Visual representation of your most frequently pressed keys, helping you identify patterns in your typing.
+The dev server runs at `http://localhost:5173`.
 
-## 🤝 Contributing
+### Backend
 
-Contributions are welcome! Feel free to:
-- Report bugs
-- Suggest new features
-- Submit pull requests
-- Improve documentation
+```bash
+cd backend
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
 
-## 📝 License
+The API runs at `http://localhost:8000`.
+
+### Environment
+
+The frontend expects the backend API at `https://zaid00987.pythonanywhere.com` in production. For local development, update the base URL in `frontend/src/services/api.js`.
+
+## Deployment
+
+- **Frontend:** Vercel (auto-deploys from `main` branch)
+- **Backend:** PythonAnywhere (manual deploy via git pull + reload)
+
+## License
 
 This project is open source and available under the [MIT License](LICENSE).
-
-## 🙏 Acknowledgments
-
-- Font: [Inter](https://fonts.google.com/specimen/Inter) & [JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono)
-- Icons: Emoji characters
-- 3D Effects: [Three.js](https://threejs.org/)
-- Smooth Scroll: [Lenis](https://github.com/studio-freight/lenis)
-- Confetti: [canvas-confetti](https://github.com/catdad/canvas-confetti)
-
-## 📧 Contact
-
-For questions or feedback, please open an issue on GitHub.
-
----
-
-**Happy Typing! ⌨️✨**
