@@ -12,10 +12,19 @@ export function AppProvider({ children }) {
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
-    auth.session().then(u => {
-      setUser(u);
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      auth.session().then(u => {
+        setUser(u);
+        setLoading(false);
+      }).catch(() => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        setLoading(false);
+      });
+    } else {
       setLoading(false);
-    }).catch(() => setLoading(false));
+    }
   }, []);
 
   useEffect(() => {
