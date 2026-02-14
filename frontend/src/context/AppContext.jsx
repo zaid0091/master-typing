@@ -8,7 +8,7 @@ export function AppProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const [toast, setToast] = useState(null);
-  const [activeSection, setActiveSection] = useState('test');
+
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export function AppProvider({ children }) {
 
   const value = {
     user, setUser, loading, theme, toggleTheme,
-    toast, showToast, activeSection, setActiveSection,
+    toast, showToast,
     refreshUser, showAuthModal, setShowAuthModal,
   };
 

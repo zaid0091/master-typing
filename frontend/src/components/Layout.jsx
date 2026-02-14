@@ -1,15 +1,9 @@
 import { useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import Navbar from './Navbar';
 import Toast from './Toast';
 import AuthModal from './AuthModal';
-import TestSection from './TestSection';
-import AchievementsSection from './AchievementsSection';
-import LeaderboardSection from './LeaderboardSection';
-import ShopSection from './ShopSection';
-import ClansSection from './ClansSection';
-import HistorySection from './HistorySection';
-import ProfileSection from './ProfileSection';
 import ParticleBackground from './ParticleBackground';
 
 const PET_MAP = {
@@ -17,8 +11,27 @@ const PET_MAP = {
   'pet-dragon': '🐉',
 };
 
-export default function Layout() {
-  const { activeSection, user, loading, showAuthModal, setShowAuthModal, setActiveSection, showToast } = useApp();
+const TITLES = {
+  '/': 'Typing Master',
+  '/achievements': 'Achievements | Typing Master',
+  '/leaderboard': 'Leaderboard | Typing Master',
+  '/shop': 'Shop | Typing Master',
+  '/clans': 'Clans | Typing Master',
+  '/history': 'History | Typing Master',
+  '/profile': 'Profile | Typing Master',
+};
+
+const AUTH_REQUIRED = ['/achievements', '/shop', '/clans', '/history', '/profile'];
+
+export default function Layout({ children }) {
+  const { user, loading, showAuthModal, setShowAuthModal, showToast } = useApp();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Update page title
+  useEffect(() => {
+    document.title = TITLES[location.pathname] || 'Typing Master';
+  }, [location.pathname]);
 
   // Apply equipped shop theme to document
   useEffect(() => {
@@ -35,14 +48,14 @@ export default function Layout() {
     }
   }, [user?.equipped_theme, user?.equipped_aura]);
 
-  // Redirect guests to test section if they navigate to auth-required sections
+  // Redirect guests away from auth-required pages
   useEffect(() => {
-    if (!user && !['test', 'leaderboard'].includes(activeSection)) {
-      setActiveSection('test');
+    if (!loading && !user && AUTH_REQUIRED.includes(location.pathname)) {
+      navigate('/', { replace: true });
       showToast('Login to access this feature', false);
       setShowAuthModal(true);
     }
-  }, [activeSection, user, setActiveSection, showToast, setShowAuthModal]);
+  }, [location.pathname, user, loading, navigate, showToast, setShowAuthModal]);
 
   if (loading) {
     return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--text-color)' }}>Loading...</div>;
@@ -56,13 +69,7 @@ export default function Layout() {
         <Navbar />
         <main>
           <div className="main-container">
-            {activeSection === 'test' && <TestSection />}
-            {activeSection === 'achievements' && <AchievementsSection />}
-            {activeSection === 'leaderboard' && <LeaderboardSection />}
-            {activeSection === 'shop' && <ShopSection />}
-            {activeSection === 'clans' && <ClansSection />}
-            {activeSection === 'stats' && <HistorySection />}
-            {activeSection === 'profile' && <ProfileSection />}
+            {children}
           </div>
         </main>
         {petEmoji && (
