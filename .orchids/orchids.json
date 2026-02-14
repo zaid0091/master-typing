@@ -1,9 +1,0 @@
-{
-  "projectId": "1a3bafce-5f2a-4c08-ba27-0625f3f1a960",
-  "createdAt": 1770969700234,
-  "version": "1.0",
-  "startupCommands": [
-    "cd backend; python manage.py runserver 8000 & cd ../frontend; bun install; npx vite --port 3000"
-  ],
-  "templateId": "any"
-}
