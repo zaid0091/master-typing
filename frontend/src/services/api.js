@@ -63,7 +63,12 @@ async function request(url, options = {}) {
   if (res.status === 204) return null;
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || err.detail || res.statusText);
+    // Handle DRF field errors like {"username": ["already exists"]}
+    const fieldErrors = Object.entries(err)
+      .filter(([k]) => k !== 'error' && k !== 'detail')
+      .map(([, v]) => (Array.isArray(v) ? v.join(', ') : v))
+      .join('; ');
+    throw new Error(err.error || err.detail || fieldErrors || res.statusText);
   }
   return res.json();
 }
