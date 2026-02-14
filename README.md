@@ -99,10 +99,6 @@ typing-master/
 │   ├── clans/               # Clans app
 │   ├── manage.py
 │   └── requirements.txt
-├── index.html               # Original standalone version
-├── script.js
-├── style.css
-├── visuals.js
 └── README.md
 ```
 
