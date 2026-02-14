@@ -15,12 +15,11 @@ export default function AuthModal({ onClose }) {
     setError('');
     setSubmitting(true);
     try {
-        const data = isLogin
-            ? await auth.login(username, password)
-            : await auth.register(username, password);
-        if (!data?.user) throw new Error('Login failed. Please try again.');
-        setUser(data.user);
-        showToast(`Welcome, ${data.user.username}!`);
+      const user = isLogin
+        ? await auth.login(username, password)
+        : await auth.register(username, password);
+        setUser(user);
+        showToast(`Welcome, ${user.username}!`);
         if (onClose) onClose();
     } catch (err) {
       setError(err.message);

@@ -1,0 +1,4 @@
+2026-02-13T11:32:51.228Z [network][GET 200] /api/auth/session/
+  response: {"id":2,"username":"Zaid","avatar":"🐱","xp":125775,"bits":385,"level":126,"xp_in_current_level":775,"equipped_theme":"theme-sunset","equipped_aura":"","equipped_pet":"pet-dragon","equipped_title":"Typing Legend","total_words_typed":8385}
+2026-02-13T11:32:51.524Z [network][GET 200] /api/auth/session/
+  response: {"id":2,"username":"Zaid","avatar":"🐱","xp":125775,"bits":385,"level":126,"xp_in_current_level":775,"equipped_theme":"theme-sunset","equipped_aura":"","equipped_pet":"pet-dragon","equipped_title":"Typing Legend","total_words_typed":8385}

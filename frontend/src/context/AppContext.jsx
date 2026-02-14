@@ -12,37 +12,10 @@ export function AppProvider({ children }) {
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    const refresh = localStorage.getItem('refresh_token');
-    if (token) {
-      auth.session()
-        .then(u => { setUser(u); setLoading(false); })
-        .catch(async () => {
-          // Access token expired — try refreshing
-          if (refresh) {
-            try {
-              const res = await fetch(
-                (import.meta.env.VITE_API_URL || '') + '/api/auth/token/refresh/',
-                { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh }) }
-              );
-              if (res.ok) {
-                const data = await res.json();
-                localStorage.setItem('access_token', data.access);
-                if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
-                const u = await auth.session();
-                setUser(u);
-                setLoading(false);
-                return;
-              }
-            } catch {}
-          }
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          setLoading(false);
-        });
-    } else {
+    auth.session().then(u => {
+      setUser(u);
       setLoading(false);
-    }
+    }).catch(() => setLoading(false));
   }, []);
 
   useEffect(() => {

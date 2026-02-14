@@ -1,112 +1,36 @@
-const BASE = (import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://zaid00987.pythonanywhere.com' : '')) + '/api';
+const BASE = (import.meta.env.VITE_API_URL || '') + '/api';
 
-function getAccessToken() {
-  return localStorage.getItem('access_token');
-}
-
-function getRefreshToken() {
-  return localStorage.getItem('refresh_token');
-}
-
-function setTokens(tokens) {
-  localStorage.setItem('access_token', tokens.access);
-  localStorage.setItem('refresh_token', tokens.refresh);
-}
-
-function clearTokens() {
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('refresh_token');
-}
-
-async function refreshAccessToken() {
-  const refresh = getRefreshToken();
-  if (!refresh) return null;
-  try {
-    const res = await fetch(BASE + '/auth/token/refresh/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh }),
-    });
-    if (!res.ok) {
-      clearTokens();
-      return null;
-    }
-    const data = await res.json();
-    localStorage.setItem('access_token', data.access);
-    if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
-    return data.access;
-  } catch {
-    clearTokens();
-    return null;
-  }
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
 }
 
 async function request(url, options = {}) {
-  let token = getAccessToken();
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
-  };
-
-  let res = await fetch(BASE + url, { ...options, headers });
-
-  // If 401, try refreshing the token once
-  if (res.status === 401 && token) {
-    const newToken = await refreshAccessToken();
-    if (newToken) {
-      headers.Authorization = `Bearer ${newToken}`;
-      res = await fetch(BASE + url, { ...options, headers });
-    }
-  }
-
+  const csrfToken = getCookie('csrftoken');
+  const res = await fetch(BASE + url, {
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+      ...options.headers,
+    },
+    ...options,
+  });
   if (res.status === 204) return null;
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    // Handle DRF field errors like {"username": ["already exists"]}
-    const fieldErrors = Object.entries(err)
-      .filter(([k]) => k !== 'error' && k !== 'detail')
-      .map(([, v]) => (Array.isArray(v) ? v.join(', ') : v))
-      .join('; ');
-    throw new Error(err.error || err.detail || fieldErrors || res.statusText);
+    throw new Error(err.error || err.detail || res.statusText);
   }
   return res.json();
 }
 
-// Public POST (no auth header, no token refresh)
-async function publicPost(url, body) {
-  const res = await fetch(BASE + url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const fieldErrors = Object.entries(data)
-      .filter(([k]) => k !== 'error' && k !== 'detail')
-      .map(([, v]) => (Array.isArray(v) ? v.join(', ') : v))
-      .join('; ');
-    throw new Error(data.error || data.detail || fieldErrors || res.statusText);
-  }
-  return data;
-}
-
 export const auth = {
   session: () => request('/auth/session/'),
-  login: async (username, password) => {
-    const data = await publicPost('/auth/login/', { username, password });
-    if (data.tokens) setTokens(data.tokens);
-    return data;
-  },
-  register: async (username, password) => {
-    const data = await publicPost('/auth/register/', { username, password });
-    if (data.tokens) setTokens(data.tokens);
-    return data;
-  },
-  logout: () => {
-    clearTokens();
-    return Promise.resolve({ message: 'Logged out' });
-  },
+  login: (username, password) => request('/auth/login/', { method: 'POST', body: JSON.stringify({ username, password }) }),
+  register: (username, password) => request('/auth/register/', { method: 'POST', body: JSON.stringify({ username, password }) }),
+  logout: () => request('/auth/logout/', { method: 'POST' }),
   profile: () => request('/auth/profile/'),
   updateProfile: (data) => request('/auth/profile/', { method: 'PATCH', body: JSON.stringify(data) }),
 };
@@ -128,7 +52,7 @@ export const shop = {
 
 export const clans = {
   list: () => request('/clans/list/'),
-  mine: () => request('/clans/my/'),
+    mine: () => request('/clans/my/'),
   create: (name) => request('/clans/create/', { method: 'POST', body: JSON.stringify({ name }) }),
   join: (clan_id) => request('/clans/join/', { method: 'POST', body: JSON.stringify({ clan_id }) }),
   leave: () => request('/clans/leave/', { method: 'POST' }),

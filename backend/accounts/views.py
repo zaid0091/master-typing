@@ -2,37 +2,28 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from django.contrib.auth import authenticate, get_user_model
-from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from .serializers import UserSerializer, RegisterSerializer, LoginSerializer
 
 User = get_user_model()
 
 
-def get_tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
-    return {
-        'access': str(refresh.access_token),
-        'refresh': str(refresh),
-    }
-
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@ensure_csrf_cookie
 def register_view(request):
     serializer = RegisterSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
-        tokens = get_tokens_for_user(user)
-        return Response({
-            'user': UserSerializer(user).data,
-            'tokens': tokens,
-        }, status=status.HTTP_201_CREATED)
+        login(request, user)
+        return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@ensure_csrf_cookie
 def login_view(request):
     serializer = LoginSerializer(data=request.data)
     if serializer.is_valid():
@@ -41,18 +32,15 @@ def login_view(request):
             password=serializer.validated_data['password'],
         )
         if user:
-            tokens = get_tokens_for_user(user)
-            return Response({
-                'user': UserSerializer(user).data,
-                'tokens': tokens,
-            })
+            login(request, user)
+            return Response(UserSerializer(user).data)
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
 def logout_view(request):
-    # JWT is stateless; frontend clears tokens. This endpoint is a no-op.
+    logout(request)
     return Response({'message': 'Logged out'})
 
 
@@ -70,6 +58,9 @@ def profile_view(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
+@ensure_csrf_cookie
 def session_view(request):
-    return Response(UserSerializer(request.user).data)
+    if request.user.is_authenticated:
+        return Response(UserSerializer(request.user).data)
+    return Response(None, status=status.HTTP_204_NO_CONTENT)
