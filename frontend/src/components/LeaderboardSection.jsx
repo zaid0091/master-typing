@@ -1,25 +1,34 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { tests, leaderboard as lbApi } from '../services/api';
+
+const CACHE_TTL = 60000; // 1 minute
 
 export default function LeaderboardSection() {
   const [filter, setFilter] = useState('all');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const cache = useRef({});
 
   useEffect(() => {
     loadData();
   }, [filter]);
 
   const loadData = async () => {
+    const now = Date.now();
+    const cached = cache.current[filter];
+    if (cached && (now - cached.ts) < CACHE_TTL) {
+      setData(cached.data);
+      return;
+    }
+
     setLoading(true);
     try {
+      let result;
       if (filter === 'global') {
-        const scores = await lbApi.global();
-        setData(scores || []);
+        result = (await lbApi.global()) || [];
       } else {
-        const history = await tests.history();
-        let filtered = [...(history || [])];
-        const now = Date.now();
+        const history = (await tests.history()) || [];
+        let filtered = [...history];
         if (filter === 'weekly') {
           filtered = filtered.filter(r => (now - new Date(r.created_at).getTime()) < 7 * 86400000);
         } else if (filter === 'monthly') {
@@ -28,8 +37,10 @@ export default function LeaderboardSection() {
           filtered = filtered.filter(r => r.difficulty === 'hard');
         }
         filtered.sort((a, b) => b.wpm - a.wpm);
-        setData(filtered.slice(0, 10));
+        result = filtered.slice(0, 10);
       }
+      cache.current[filter] = { data: result, ts: now };
+      setData(result);
     } catch (err) {
       console.error(err);
       setData([]);

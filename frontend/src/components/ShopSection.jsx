@@ -2,14 +2,29 @@ import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { shop } from '../services/api';
 
+let shopCache = { data: null, ts: 0 };
+const CACHE_TTL = 60000;
+
 export default function ShopSection() {
   const { user, setUser, showToast, refreshUser } = useApp();
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState(shopCache.data || []);
+  const [loading, setLoading] = useState(!shopCache.data);
 
   useEffect(() => { loadItems(); }, []);
 
-  const loadItems = async () => {
-    try { setItems(await shop.items()); } catch {}
+  const loadItems = async (force = false) => {
+    const now = Date.now();
+    if (!force && shopCache.data && (now - shopCache.ts) < CACHE_TTL) {
+      setItems(shopCache.data);
+      return;
+    }
+    setLoading(true);
+    try {
+      const data = await shop.items();
+      shopCache = { data, ts: Date.now() };
+      setItems(data);
+    } catch {}
+    setLoading(false);
   };
 
   const handleBuy = async (itemId) => {
@@ -17,7 +32,7 @@ export default function ShopSection() {
       const res = await shop.buy(itemId);
       showToast(res.message);
       if (res.user) setUser(res.user);
-      await loadItems();
+      await loadItems(true);
     } catch (err) {
       showToast(err.message || 'Purchase failed', false);
     }
@@ -28,7 +43,7 @@ export default function ShopSection() {
       const res = await shop.equip(itemId);
       showToast(res.message);
       if (res.user) setUser(res.user);
-      await loadItems();
+      await loadItems(true);
     } catch (err) {
       showToast(err.message || 'Equip failed', false);
     }
