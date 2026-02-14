@@ -1,4 +1,4 @@
-const BASE = (import.meta.env.VITE_API_URL || '') + '/api';
+const BASE = (import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://zaid00987.pythonanywhere.com' : '')) + '/api';
 
 function getAccessToken() {
   return localStorage.getItem('access_token');
@@ -73,15 +73,33 @@ async function request(url, options = {}) {
   return res.json();
 }
 
+// Public POST (no auth header, no token refresh)
+async function publicPost(url, body) {
+  const res = await fetch(BASE + url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const fieldErrors = Object.entries(data)
+      .filter(([k]) => k !== 'error' && k !== 'detail')
+      .map(([, v]) => (Array.isArray(v) ? v.join(', ') : v))
+      .join('; ');
+    throw new Error(data.error || data.detail || fieldErrors || res.statusText);
+  }
+  return data;
+}
+
 export const auth = {
   session: () => request('/auth/session/'),
   login: async (username, password) => {
-    const data = await request('/auth/login/', { method: 'POST', body: JSON.stringify({ username, password }) });
+    const data = await publicPost('/auth/login/', { username, password });
     if (data.tokens) setTokens(data.tokens);
     return data;
   },
   register: async (username, password) => {
-    const data = await request('/auth/register/', { method: 'POST', body: JSON.stringify({ username, password }) });
+    const data = await publicPost('/auth/register/', { username, password });
     if (data.tokens) setTokens(data.tokens);
     return data;
   },
